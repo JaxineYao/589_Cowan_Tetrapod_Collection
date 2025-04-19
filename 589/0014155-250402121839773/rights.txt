@@ -1,0 +1,2 @@
+Dataset: Cowan Tetrapod Collection - Mammals 
+Rights as supplied: http://creativecommons.org/publicdomain/zero/1.0/legalcode

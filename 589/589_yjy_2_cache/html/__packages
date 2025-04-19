@@ -1,0 +1,17 @@
+readr
+sf
+dplyr
+spatstat.data
+spatstat.univar
+spatstat.geom
+rnaturalearth
+rnaturalearthdata
+spatstat.random
+nlme
+spatstat.explore
+rpart
+spatstat.model
+spatstat.linnet
+spatstat
+sp
+raster

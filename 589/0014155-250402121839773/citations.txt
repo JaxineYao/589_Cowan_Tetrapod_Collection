@@ -1,0 +1,2 @@
+When using this dataset please use the following citation and pay attention to the rights documented in rights.txt:
+Szabo I, Stinson C, Pitblado M (2024). Cowan Tetrapod Collection - Mammals. Version 5.2. University of British Columbia. Occurrence dataset https://doi.org/10.15468/qgdpad accessed via GBIF.org on 2025-04-09.

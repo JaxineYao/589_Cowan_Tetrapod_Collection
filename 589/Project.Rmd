@@ -1,0 +1,33 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+Working in groups of 4, students will be required to complete a data analysis assignment. This assignment is designed to provide students with an opportunity to apply what they have learned in the lectures and labs in an unguided format as they would if they were analysing spatial point data outside of a classroom setting. For this project, students will apply the modelling tools covered in the lectures on an empirical dataset (details below) and give a short presentation about their work on these data that summarises their findings. This presentation should be comprised of five sections: Introduction, Methods, Results, Discussion, References.
+
+ 
+
+Introduction: Provide a brief description of the study system from which the data come and an outline of what questions you intend on exploring with the data, citing any relevant literature.
+
+Methods: Briefly describe the data and what variables are included. Provide a detailed description of the analytical workflow that was applied to the data, citing any relevant literature and statistical packages employed. There should be enough information that anyone can reproduce the workflow if they had access to the data.
+
+Results: Length: Describe your statistical findings. Tables and figures should be used throughout.
+
+Discussion: Provide a brief summary of your findings.
+
+References: Include references to all necessary literature.
+
+ 
+
+In addition, students are to create a GitHub repository for their project where all relevant code and files are to be stored.
+
+ 
+
+Datasets: To complete these assignments, each group much select a species of their choosing and download the occurrence records from the Global Biodiversity Information Facility (GBIF) data repository (https://www.gbif.org/Links to an external site.). The species must be found in British Columbia. Groups will be provided provided with a set of environmental variables, and must use these to describe trends in the observed point data.
+
+ 
+
+Grading: Presentations will be graded out of 75%, and will based on the following rubric, and the GitHub repository will be worth an additional 25%.
+

@@ -1,0 +1,168 @@
+---
+title: "589_yjy_2"
+output: 
+  html_document:
+    df_print: paged
+date: "2025-04-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(sf)
+library(dplyr)
+library(spatstat.geom)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(spatstat)
+library(raster)
+```
+
+```{r,cache=TRUE}
+# Read file
+data_occ <- read_tsv("0014155-250402121839773/occurrence.txt", guess_max = 20000)
+```
+
+```{r}
+# Data clean
+data_clean <- data_occ %>%
+  filter(!is.na(decimalLatitude), !is.na(decimalLongitude))
+
+# Data sf + Projection( unit: m)
+points_sf <- st_as_sf(data_clean, coords = c("decimalLongitude", "decimalLatitude"), crs = 4326)
+
+points_proj <- st_transform(points_sf, crs = 3857)
+```
+
+```{r}
+# Find North America
+north_america <- ne_countries(continent = "North America", returnclass = "sf")
+
+# Find usa+canda and project
+usa_canada <- north_america %>%
+  dplyr::filter(admin %in% c("United States of America", "Canada"))
+usa_canada_proj <- st_transform(usa_canada, crs = 3857)
+
+points_in_usa_canada <- st_intersection(points_proj, usa_canada_proj)
+```
+
+```{r}
+# Make ppp file
+coords <- st_coordinates(points_in_usa_canada)
+na_owin <- as.owin(usa_canada_proj)
+
+points_ppp <- ppp(x = coords[, 1],
+                  y = coords[, 2],
+                  window = na_owin)
+```
+
+```{r}
+# Plot
+plot(na_owin, main = "North American Mammal Occurrence Points")
+plot(points_ppp, add = TRUE, pch = 16, col = "steelblue")
+```
+
+```{r}
+# Use kernel density
+density_map <- density.ppp(points_ppp, sigma = 50000)
+
+# Plot
+plot(density_map, main = "Kernel Density of Occurrence Points")
+contour(density_map, add = TRUE)
+points(points_ppp, pch = 16, cex = 0.3, col = "black")
+```
+
+```{r}
+#  Homogeneous PPP
+model_hom <- ppm(points_ppp, ~1)  # Homogeneous Poisson Model
+summary(model_hom)
+
+# Add smoothness
+model_trend <- ppm(points_ppp, ~ polynom(x, y, 2))  # poly 2
+summary(model_trend)
+```
+
+```{r}
+# Sample
+set.seed(42)
+ppp_sub <- points_ppp[sample(1:points_ppp$n, 199)]
+
+# Simplify
+model_sub <- ppm(ppp_sub, ~1)
+
+# Use Gest() to make envelope
+env_g <- envelope(model_sub, fun = Gest, nsim = 19)
+plot(env_g, main = "Envelope (G function, subsampled)")
+```
+
+```{r}
+
+# Read Ele
+elev_raster <- raster("wc2.1_10m_elev.tif")
+
+# Cut
+usa_canada_4326 <- ne_countries(continent = "North America", returnclass = "sf") %>%
+  filter(admin %in% c("United States of America", "Canada"))
+
+elev_crop <- crop(elev_raster, extent(usa_canada_4326))
+elev_crop <- mask(elev_crop, usa_canada_4326)
+
+# Proj
+elev_proj <- projectRaster(elev_crop, crs = st_crs(points_proj)$proj4string)
+```
+
+```{r}
+plot(elev_proj, main = "Elevation after proper crop + reprojection")
+plot(st_geometry(usa_canada_proj), add = TRUE, border = "red")
+```
+
+```{r}
+# Make right
+elev_mat <- as.matrix(elev_proj)
+elev_mat <- elev_mat[nrow(elev_mat):1, ]
+
+# make im
+ext <- extent(elev_proj)
+res <- res(elev_proj)
+x_coords <- seq(ext@xmin + res[1]/2, ext@xmax - res[1]/2, by = res[1])
+y_coords <- seq(ext@ymin + res[2]/2, ext@ymax - res[2]/2, by = res[2])
+
+elev_im <- im(mat = elev_mat, xcol = x_coords, yrow = y_coords)
+
+# plot
+plot(elev_im, main = "Elevation as im")
+```
+
+```{r}
+# Nonhomo Poisson with elec
+model_elev <- ppm(points_ppp, ~ elev,
+                  covariates = list(elev = elev_im))
+
+summary(model_elev)
+```
+
+```{r}
+# Make Na as mean
+elev_mat[is.na(elev_mat)] <- median(elev_mat, na.rm = TRUE)
+
+# New elev_im
+elev_im <- im(mat = elev_mat, xcol = x_coords, yrow = y_coords)
+
+# Re ppm
+model_elev <- ppm(points_ppp, ~ elev, covariates = list(elev = elev_im))
+
+# Get residuals
+resid_elev <- residuals(model_elev, type = "Pearson")
+
+# Smooth + Plotting
+plot(Smooth(resid_elev), main = "Smoothed Pearson Residuals (Elevation Model)")
+contour(Smooth(resid_elev), add = TRUE)
+```
+
+```{r}
+rho <- rhohat(points_ppp, elev_im)
+plot(rho, main = "Effect of elevation on mammal intensity")
+```
