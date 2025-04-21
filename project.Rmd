@@ -1,5 +1,5 @@
 ---
-title: "589_yjy_2"
+title: "589_project"
 output: 
   html_document:
     df_print: paged
@@ -23,7 +23,7 @@ library(raster)
 
 ```{r,cache=TRUE}
 # Read file
-data_occ <- read_tsv("0014155-250402121839773/occurrence.txt", guess_max = 20000)
+data_occ <- read_tsv("data/0014155-250402121839773/occurrence.txt", guess_max = 20000)
 ```
 
 ```{r}
@@ -101,7 +101,7 @@ plot(env_g, main = "Envelope (G function, subsampled)")
 ```{r}
 
 # Read Ele
-elev_raster <- raster("wc2.1_10m_elev.tif")
+elev_raster <- raster("data/wc2.1_10m_elev.tif")
 
 # Cut
 usa_canada_4326 <- ne_countries(continent = "North America", returnclass = "sf") %>%
