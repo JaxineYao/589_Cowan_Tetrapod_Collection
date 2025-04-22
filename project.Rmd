@@ -67,7 +67,7 @@ plot(points_ppp, add = TRUE, pch = 16, col = "steelblue")
 
 ```{r}
 # Use kernel density
-density_map <- density.ppp(points_ppp, sigma = 50000)
+density_map <- density.ppp(points_ppp, sigma = 1000000)
 
 # Plot
 plot(density_map, main = "Kernel Density of Occurrence Points")
@@ -83,6 +83,12 @@ summary(model_hom)
 # Add smoothness
 model_trend <- ppm(points_ppp, ~ polynom(x, y, 2))  # poly 2
 summary(model_trend)
+
+AIC(model_hom); AIC(model_trend)
+anova(model_hom, model_trend, test = "LRT")
+
+plot(model_hom, se = F, superimpose = F)
+plot(model_trend, se = F, superimpose = F)
 ```
 
 ```{r}
@@ -91,15 +97,17 @@ set.seed(42)
 ppp_sub <- points_ppp[sample(1:points_ppp$n, 199)]
 
 # Simplify
-model_sub <- ppm(ppp_sub, ~1)
+model_sub1 <- ppm(ppp_sub, ~1)
+model_sub2 <- ppm(ppp_sub, ~ polynom(x, y, 2))
 
 # Use Gest() to make envelope
-env_g <- envelope(model_sub, fun = Gest, nsim = 19)
-plot(env_g, main = "Envelope (G function, subsampled)")
+env_g1 <- envelope(model_sub1, fun = Gest, nsim = 19)
+plot(env_g1, main = "Envelope 1 (G function, subsampled)")
+env_g2 <- envelope(model_sub2, fun = Gest, nsim = 19)
+plot(env_g2, main = "Envelope 2 (G function, subsampled)")
 ```
 
 ```{r}
-
 # Read Ele
 elev_raster <- raster("data/wc2.1_10m_elev.tif")
 
@@ -137,11 +145,25 @@ plot(elev_im, main = "Elevation as im")
 ```
 
 ```{r}
+rho <- rhohat(points_ppp, elev_im)
+plot(rho, main = "Effect of elevation on mammal intensity")
+```
+
+```{r}
 # Nonhomo Poisson with elec
 model_elev <- ppm(points_ppp, ~ elev,
                   covariates = list(elev = elev_im))
+model_elev_2 <- ppm(points_ppp, ~ elev + I(elev^2),
+                  covariates = list(elev = elev_im))
 
 summary(model_elev)
+summary(model_elev_2)
+
+AIC(model_elev); AIC(model_elev_2)
+anova(model_elev, model_elev_2, test = "LRT")
+
+plot(model_elev, se = F, superimpose = F)
+plot(model_elev_2, se = F, superimpose = F)
 ```
 
 ```{r}
@@ -160,9 +182,4 @@ resid_elev <- residuals(model_elev, type = "Pearson")
 # Smooth + Plotting
 plot(Smooth(resid_elev), main = "Smoothed Pearson Residuals (Elevation Model)")
 contour(Smooth(resid_elev), add = TRUE)
-```
-
-```{r}
-rho <- rhohat(points_ppp, elev_im)
-plot(rho, main = "Effect of elevation on mammal intensity")
 ```
